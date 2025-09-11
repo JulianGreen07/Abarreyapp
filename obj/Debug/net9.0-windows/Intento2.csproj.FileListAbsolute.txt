@@ -1,0 +1,14 @@
+c:\Users\julia\API2\Intento2\bin\Debug\net9.0-windows\Intento2.exe
+c:\Users\julia\API2\Intento2\bin\Debug\net9.0-windows\Intento2.deps.json
+c:\Users\julia\API2\Intento2\bin\Debug\net9.0-windows\Intento2.runtimeconfig.json
+c:\Users\julia\API2\Intento2\bin\Debug\net9.0-windows\Intento2.dll
+c:\Users\julia\API2\Intento2\bin\Debug\net9.0-windows\Intento2.pdb
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\Intento2.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\Intento2.AssemblyInfoInputs.cache
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\Intento2.AssemblyInfo.cs
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\Intento2.csproj.CoreCompileInputs.cache
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\Intento2.dll
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\refint\Intento2.dll
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\Intento2.pdb
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\Intento2.genruntimeconfig.cache
+c:\Users\julia\API2\Intento2\obj\Debug\net9.0-windows\ref\Intento2.dll
