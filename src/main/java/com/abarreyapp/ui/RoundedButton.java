@@ -10,7 +10,6 @@ public class RoundedButton extends JButton {
         setFocusPainted(false);
         setContentAreaFilled(false);
         setBorder(new EmptyBorder(10, 20, 10, 20));
-        // setForeground(Color.WHITE); // Se elimina para que el Look&Feel lo gestione
         setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 

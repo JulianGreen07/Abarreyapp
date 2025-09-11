@@ -9,8 +9,8 @@ public class RoundedTextField extends JTextField {
     private Shape shape;
     public RoundedTextField(int size) {
         super(size);
-        setOpaque(false); // As the text field is transparent, the background of the container will be visible
-        setBorder(new EmptyBorder(10, 15, 10, 15)); // Padding
+        setOpaque(false);
+        setBorder(new EmptyBorder(10, 15, 10, 15));
         setFont(new Font("Arial", Font.PLAIN, 14));
     }
     protected void paintComponent(Graphics g) {

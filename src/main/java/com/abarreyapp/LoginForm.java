@@ -27,7 +27,6 @@ public class LoginForm extends JFrame {
         setResizable(false);
         setLayout(new BorderLayout());
 
-        // Panel Izquierdo (Imagen)
         JPanel leftPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -46,19 +45,15 @@ public class LoginForm extends JFrame {
         leftPanel.setPreferredSize(new Dimension(400, 500));
         add(leftPanel, BorderLayout.WEST);
 
-        // Panel Derecho (Formulario)
         JPanel rightPanel = new JPanel();
-        // rightPanel.setBackground(Color.WHITE); // Eliminado para que el Look & Feel lo gestione
         rightPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 20, 10, 20);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // --- Panel de Cabecera con Título y Toggle ---
         JPanel headerPanel = new JPanel(new BorderLayout());
 
-        // Interruptor de Tema
         JToggleButton themeToggleButton = new JToggleButton("Modo Oscuro");
         themeToggleButton.setSelected(UIManager.getLookAndFeel() instanceof FlatDarkLaf);
         themeToggleButton.addActionListener(e -> {
@@ -75,13 +70,11 @@ public class LoginForm extends JFrame {
                 ex.printStackTrace();
             }
         });
-        // Añadimos un pequeño panel para el toggle para que no ocupe toda la altura
         JPanel togglePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         togglePanel.add(themeToggleButton);
         headerPanel.add(togglePanel, BorderLayout.NORTH);
 
 
-        // Título "BIENVENIDO"
         JLabel lblBienvenido = new JLabel("BIENVENIDO");
         lblBienvenido.setFont(new Font("Arial", Font.BOLD, 24));
         lblBienvenido.setHorizontalAlignment(SwingConstants.CENTER);
@@ -95,11 +88,9 @@ public class LoginForm extends JFrame {
         rightPanel.add(headerPanel, gbc);
 
 
-        // Reset insets
         gbc.insets = new Insets(10, 20, 10, 20);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Etiqueta y campo Usuario
         JLabel lblUsuario = new JLabel("Usuario");
         lblUsuario.setFont(new Font("Arial", Font.PLAIN, 14));
         gbc.gridy = 1;
@@ -109,7 +100,6 @@ public class LoginForm extends JFrame {
         gbc.gridy = 2;
         rightPanel.add(txtUsuario, gbc);
 
-        // Etiqueta y campo Contraseña
         JLabel lblContrasena = new JLabel("Contraseña");
         lblContrasena.setFont(new Font("Arial", Font.PLAIN, 14));
         gbc.gridy = 3;
@@ -119,7 +109,6 @@ public class LoginForm extends JFrame {
         gbc.gridy = 4;
         rightPanel.add(txtContrasena, gbc);
 
-        // Etiqueta y ComboBox Sucursal
         JLabel lblSucursal = new JLabel("Sucursal");
         lblSucursal.setFont(new Font("Arial", Font.PLAIN, 14));
         gbc.gridy = 5;
@@ -131,11 +120,10 @@ public class LoginForm extends JFrame {
         gbc.gridy = 6;
         rightPanel.add(cmbSucursal, gbc);
 
-        // Botón Ingresar
         btnIngresar = new RoundedButton("Ingresar");
         btnIngresar.setFont(new Font("Arial", Font.BOLD, 16));
-        btnIngresar.setBackground(new Color(0, 123, 255)); // Color de fondo explícito
-        btnIngresar.setForeground(Color.WHITE); // Color de texto explícito
+        btnIngresar.setBackground(new Color(0, 123, 255));
+        btnIngresar.setForeground(Color.WHITE);
         gbc.gridy = 7;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -144,7 +132,6 @@ public class LoginForm extends JFrame {
         
         add(rightPanel, BorderLayout.CENTER);
 
-        // Lógica del botón
         btnIngresar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -158,8 +145,8 @@ public class LoginForm extends JFrame {
                 }
 
                 if (usuario.equalsIgnoreCase("admin") && contrasena.equals("1234") && sucursal.equalsIgnoreCase("Sucursal Central")) {
-                    dispose(); // Cierra el login
-                    new UsuariosForm(usuario).setVisible(true); // Abre el form de usuarios y pasa el nombre de usuario
+                    dispose();
+                    new UsuariosForm(usuario).setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(LoginForm.this, "Credenciales incorrectas", "Error", JOptionPane.ERROR_MESSAGE);
                 }
