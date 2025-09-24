@@ -9,9 +9,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
-import javax.imageio.ImageIO;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 
 public class LoginForm extends JFrame {
     private JTextField txtUsuario;
@@ -34,8 +31,10 @@ public class LoginForm extends JFrame {
                 try {
                     URL imageUrl = getClass().getResource("/login_background.png");
                     if (imageUrl != null) {
-                        Image bg = ImageIO.read(imageUrl);
+                        Image bg = new ImageIcon(imageUrl).getImage();
                         g.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
+                    } else {
+                        System.err.println("Background image not found: /login_background.png");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -55,14 +54,14 @@ public class LoginForm extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
 
         JToggleButton themeToggleButton = new JToggleButton("Modo Oscuro");
-        themeToggleButton.setSelected(UIManager.getLookAndFeel() instanceof FlatDarkLaf);
+        themeToggleButton.setSelected(false);
         themeToggleButton.addActionListener(e -> {
             try {
                 if (themeToggleButton.isSelected()) {
-                    FlatDarkLaf.setup();
+                    UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
                     themeToggleButton.setText("Modo Claro");
                 } else {
-                    FlatLightLaf.setup();
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                     themeToggleButton.setText("Modo Oscuro");
                 }
                 SwingUtilities.updateComponentTreeUI(this);
@@ -146,7 +145,7 @@ public class LoginForm extends JFrame {
 
                 if (usuario.equalsIgnoreCase("admin") && contrasena.equals("1234") && sucursal.equalsIgnoreCase("Sucursal Central")) {
                     dispose();
-                    new UsuariosForm(usuario).setVisible(true);
+                    new MainFrame(usuario).setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(LoginForm.this, "Credenciales incorrectas", "Error", JOptionPane.ERROR_MESSAGE);
                 }
