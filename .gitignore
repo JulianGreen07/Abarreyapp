@@ -1,0 +1,13 @@
+# Git ignore for packaged project
+/target/
+/*.log
+/.idea/
+*.iml
+*.class
+/.vs/
+.DS_Store
+Thumbs.db
+
+# Keep lib and resources included intentionally
+!/lib/
+!/src/main/resources/
