@@ -2,45 +2,54 @@ AbarreyApp — ready-to-run package for classmates
 
 This folder contains a self-contained copy of the AbarreyApp Java Swing application prepared for sharing on GitHub.
 
-What is included
-- Source code: src/main/java/**
-- Resources: src/main/resources/** (images used by the app)
-- FlatLaf look-and-feel: lib/flatlaf-3.4.1.jar
-- Build script (no Maven required): build.ps1
-- Run helper: run.ps1 (PowerShell) and start.bat (Windows double-click)
-- A pre-packaged JAR will be created under target/ by the build script.
+AbarreyApp — paquete listo para compartir con tus compañeros
 
-Prerequisites
-- JDK 11+ installed (JAVA_HOME set to JDK) or javac, jar, javaw on PATH.
-- Windows (the included start.bat is for Windows; PowerShell scripts work on any platform with PowerShell Core)
+Este directorio contiene una copia auto-contenida de la aplicación Java Swing AbarreyApp preparada para compartir en GitHub.
 
-How to build
-Open PowerShell in this folder and run:
+Contenido
+- Código fuente: `src/main/java/**`
+- Recursos: `src/main/resources/**` (imágenes usadas por la app)
+- FlatLaf (look-and-feel): `lib/flatlaf-3.4.1.jar`
+- Script de build (no requiere Maven): `build.ps1`
+- Helpers de ejecución: `run.ps1` (PowerShell) y `start.bat` (doble clic en Windows)
+- El script de build crea un JAR listo para ejecutar en `target/`.
+
+Requisitos
+- JDK 11+ instalado (o que `javac`, `jar` y `javaw` estén en el PATH). Es recomendable tener `JAVA_HOME` apuntando al JDK.
+- Windows (el `start.bat` incluido es para Windows); los scripts PowerShell también funcionan en PowerShell Core en otros sistemas.
+
+Cómo compilar
+Abre PowerShell en esta carpeta y ejecuta:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-This will compile sources, copy resources, and create the runnable JAR at:
+Esto compilará las fuentes, copiará los recursos y generará el JAR ejecutable en:
 
 ```
-C:\path\to\for_github\AbarreyApp\target\AbarreyApp-1.0-SNAPSHOT.jar
+C:\ruta\a\for_github\AbarreyApp\target\AbarreyApp-1.0-SNAPSHOT.jar
 ```
 
-How to run
-- Double-click `start.bat` in File Explorer (Windows). This will launch the GUI without a console window.
-- Or from PowerShell:
+Cómo ejecutar
+- Haz doble clic en `start.bat` desde el Explorador (Windows). Esto lanzará la interfaz gráfica sin abrir una consola.
+- O desde PowerShell:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\run.ps1
 ```
 
-Notes for collaborators
-- If PowerShell blocks script execution, use the command above with `-ExecutionPolicy Bypass` or set a scoped policy: `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
-- If you prefer not to include the FlatLaf JAR in the repo, remove `lib/flatlaf-3.4.1.jar` and update `build.ps1` to instruct how to download it.
+Notas para tus compañeros
+- Si PowerShell bloquea la ejecución de scripts, usa la opción `-ExecutionPolicy Bypass` como en los ejemplos anteriores, o cambia la política local para el usuario actual:
 
-License
-- This package includes the project's source files. Add or replace with your preferred license if needed.
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
 
-Contact
-- If you have issues, open a GitHub issue in the repo with the error output and environment details (OS, Java version).
+- Si no quieres incluir `flatlaf-3.4.1.jar` en el repositorio, se puede eliminar y modificar `build.ps1` para descargar la dependencia en el paso de build (se explica en el script).
+
+Licencia
+- Este paquete incluye los archivos fuente del proyecto. Añade o reemplaza con la licencia que prefieras si es necesario.
+
+Contacto
+- Si tienes problemas, abre un issue en el repositorio de GitHub describiendo el error y tu entorno (SO, versión de Java, pasos para reproducir).
