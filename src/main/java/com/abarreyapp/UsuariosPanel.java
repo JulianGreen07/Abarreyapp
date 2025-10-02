@@ -6,12 +6,15 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
+import com.abarreyapp.dao.UserDAO;
+import com.abarreyapp.model.User;
+import java.sql.SQLException;
 
 public class UsuariosPanel extends JPanel {
     private DefaultTableModel model;
@@ -26,7 +29,7 @@ public class UsuariosPanel extends JPanel {
         setLayout(new BorderLayout(20, 20));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-    // Cabecera (titulo a la izquierda, boton +Nuevo a la derecha)
+    // Cabecera (título a la izquierda, botón +Nuevo a la derecha)
     setBackground(new Color(245, 246, 248)); // fondo claro general
     JPanel headerPanel = new JPanel(new BorderLayout());
     headerPanel.setOpaque(false);
@@ -35,44 +38,68 @@ public class UsuariosPanel extends JPanel {
     titlePanel.setOpaque(false);
     JLabel titleLabel = new JLabel("Usuarios");
     titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-    // Placeholder for username, as it's not passed from MainFrame
-    String username = "Admin";
-    String capitalizedUsername = username.substring(0, 1).toUpperCase() + username.substring(1);
-    JLabel subtitleLabel = new JLabel(capitalizedUsername + ", ¡bienvenido!");
-    subtitleLabel.setForeground(new Color(120, 120, 120));
+    // Placeholder for username removed from header (we don't show the "admin, ¡bienvenido!" subtitle here)
     titlePanel.add(titleLabel);
     titlePanel.add(Box.createRigidArea(new Dimension(0,6)));
-    titlePanel.add(subtitleLabel);
     headerPanel.add(titlePanel, BorderLayout.WEST);
 
-        JToggleButton darkToggle = new JToggleButton("Modo Oscuro");
-        darkToggle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        darkToggle.setSelected(isDarkMode());
-        darkToggle.addActionListener(ae -> {
-            try {
-                if (darkToggle.isSelected()) {
-                    FlatDarkLaf.setup();
-                } else {
-                    FlatLightLaf.setup();
-                }
-                // update UI of the top-level window
-                java.awt.Window w = SwingUtilities.getWindowAncestor(this);
-                if (w != null) SwingUtilities.updateComponentTreeUI(w);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
-
-    RoundedButton newBtn = new RoundedButton("+ Nuevo", new Color(0,112,255), Color.WHITE);
+    // Forzar tema claro
+        FlatLightLaf.setup();
+    RoundedButton newBtn = new RoundedButton("+ Nuevo", new Color(40,167,69), Color.WHITE); // green
     JPanel rightControls = new JPanel();
     rightControls.setOpaque(false);
-    rightControls.add(darkToggle);
     rightControls.add(Box.createRigidArea(new Dimension(8,0)));
     rightControls.add(newBtn);
+
+    // Acción para añadir un nuevo usuario: abrir diálogo y, si confirma, agregar la fila
+    newBtn.addActionListener(e -> {
+        AddUserDialog dialog = new AddUserDialog(UsuariosPanel.this.parentFrame, "Agregar Usuario", null);
+        dialog.setVisible(true);
+        if (dialog.isConfirmed()) {
+            Object[] userData = dialog.getUserData();
+            String name = userData.length > 0 ? userData[0].toString() : "";
+            String role = userData.length > 1 ? userData[1].toString() : "";
+            String email = userData.length > 2 ? userData[2].toString() : "";
+            String phone = userData.length > 3 ? userData[3].toString() : "";
+
+            UserDAO dao = new UserDAO();
+            try {
+                User u = new User();
+                u.setName(name);
+                u.setRole(role);
+                u.setEmail(email);
+                u.setPhone(phone);
+                int newId = dao.insert(u);
+                // reload full model so row ordering and sorting is consistent
+                reload();
+                // select and scroll to the newly added row (match by id)
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    Object idObj = model.getValueAt(i, 0);
+                    if (idObj != null) {
+                        try {
+                            int id = Integer.parseInt(idObj.toString());
+                            if (id == newId) {
+                                int viewRow = table.convertRowIndexToView(i);
+                                table.getSelectionModel().setSelectionInterval(viewRow, viewRow);
+                                table.scrollRectToVisible(table.getCellRect(viewRow, 0, true));
+                                break;
+                            }
+                        } catch (NumberFormatException nfe) {}
+                    }
+                }
+            } catch (SQLException ex) {
+                // fallback a memoria: añadir fila y seleccionarla al final
+                model.addRow(new Object[]{-1, name, role, email, phone, ""});
+                int viewRow = table.convertRowIndexToView(model.getRowCount() - 1);
+                table.getSelectionModel().setSelectionInterval(viewRow, viewRow);
+                table.scrollRectToVisible(table.getCellRect(viewRow, 0, true));
+            }
+        }
+    });
     headerPanel.add(rightControls, BorderLayout.EAST);
     add(headerPanel, BorderLayout.NORTH);
 
-        // Top action area (search removed as requested). Keep an empty spacer for visual padding.
+    // Área superior de acciones (búsqueda eliminada según solicitud). Mantener un separador vacío para el espaciado visual.
         JPanel topActionPanel = new JPanel(new BorderLayout());
         topActionPanel.setOpaque(false);
         JPanel spacer = new JPanel();
@@ -80,35 +107,87 @@ public class UsuariosPanel extends JPanel {
         spacer.setPreferredSize(new Dimension(0, 8));
         topActionPanel.add(spacer, BorderLayout.CENTER);
 
-        String[] columnNames = {"Nombre", "Rol", "Correo", "Teléfono", "Acciones"};
-        Object[][] data = {
-            {"Nancy Daniela Arce Jiménez", "Administrador", "nancyataniela@gmail.com", "662139401", ""},
-            {"Darío Ruíz Álvarez", "Gerente", "darioruizalv@gmail.com", "6622384950", ""},
-            {"Laura Barragán Montalvo", "Usuario", "lauritabarrag@gmail.com", "6621483374", ""},
-            {"Miguel Montaño Carrera", "Usuario", "miguelmonta@gmail.com", "6621394919", ""},
-            {"Ximena Contreras Juárez", "Usuario", "ximenacontri@gmail.com", "6621392339", ""}
-        };
-
-        model = new DefaultTableModel(data, columnNames) {
+        String[] columnNames = {"ID","Nombre", "Rol", "Correo", "Teléfono", "Acciones"};
+        model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-               return column == 4;
+               return column == 5;
             }
         };
+
+    // Intentar cargar usuarios desde la base de datos, fallback a datos de ejemplo
+        UserDAO userDAO = new UserDAO();
+        try {
+            for (User u : userDAO.findAll()) {
+                model.addRow(new Object[]{u.getId(), u.getName(), u.getRole(), u.getEmail(), u.getPhone(), ""});
+            }
+        } catch (SQLException ex) {
+            // datos de ejemplo como fallback
+            Object[][] data = {
+                {-1, "Nancy Daniela Arce Jiménez", "Administrador", "nancyataniela@gmail.com", "662139401", ""},
+                {-1, "Darío Ruíz Álvarez", "Gerente", "darioruizalv@gmail.com", "6622384950", ""},
+                {-1, "Laura Barragán Montalvo", "Usuario", "lauritabarrag@gmail.com", "6621483374", ""},
+                {-1, "Miguel Montaño Carrera", "Usuario", "miguelmonta@gmail.com", "6621394919", ""},
+                {-1, "Ximena Contreras Juárez", "Usuario", "ximenacontri@gmail.com", "6621392339", ""}
+            };
+            for (Object[] r : data) model.addRow(r);
+        }
         
-    this.table = new JTable(model);
+    this.table = new JTable(model) {
+        @Override
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            Component c = super.prepareRenderer(renderer, row, column);
+            // no sobrescribir fondos de los renderers; permitir que el fondo de selección se pinte para celdas que no son badges
+            return c;
+        }
+    };
     table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
     table.setRowHeight(48);
     table.setShowGrid(false);
     table.setIntercellSpacing(new Dimension(0, 0));
     table.setFillsViewportHeight(true);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    // Selección de fila completa verde pálido para que los badges sigan visibles encima
+    Color paleGreen = new Color(230, 245, 235);
+    table.setSelectionBackground(paleGreen);
+    table.setSelectionForeground(UIManager.getColor("Label.foreground"));
 
-    table.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
-    table.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JCheckBox()));
-    // Role badge and email link renderers
-    table.getColumnModel().getColumn(1).setCellRenderer(new RoleBadgeRenderer());
-    table.getColumnModel().getColumn(2).setCellRenderer(new EmailRenderer());
+    // Mantener la selección por fila como predeterminada, pero permitir selección temporal de celda cuando
+    // el usuario hace clic específicamente en la columna de correo para que la celda de correo muestre
+    // el fondo de selección solo cuando esté explícitamente seleccionada.
+    table.setRowSelectionAllowed(true);
+    table.setColumnSelectionAllowed(false);
+    table.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mousePressed(MouseEvent e) {
+            int viewRow = table.rowAtPoint(e.getPoint());
+            int viewCol = table.columnAtPoint(e.getPoint());
+            if (viewRow < 0 || viewCol < 0) return;
+            // Email column is index 3 (view index)
+            if (viewCol == 3) {
+                // enable column selection and select the specific cell
+                table.setColumnSelectionAllowed(true);
+                table.setRowSelectionInterval(viewRow, viewRow);
+                table.setColumnSelectionInterval(viewCol, viewCol);
+            } else {
+                // ensure we are in full-row selection mode
+                table.setColumnSelectionAllowed(false);
+                table.setRowSelectionInterval(viewRow, viewRow);
+            }
+        }
+    });
+
+    // Ocultar columna ID
+    table.getColumnModel().getColumn(0).setMinWidth(0);
+    table.getColumnModel().getColumn(0).setMaxWidth(0);
+    table.getColumnModel().getColumn(0).setWidth(0);
+
+    // La columna de acciones ahora está en el índice 5
+    table.getColumnModel().getColumn(5).setCellRenderer(new ButtonRenderer());
+    table.getColumnModel().getColumn(5).setCellEditor(new ButtonEditor(new JCheckBox()));
+    // Renderers para badge de rol y enlace de correo (índices desplazados)
+    table.getColumnModel().getColumn(2).setCellRenderer(new RoleBadgeRenderer());
+    table.getColumnModel().getColumn(3).setCellRenderer(new EmailRenderer());
 
     JTableHeader header = table.getTableHeader();
     header.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -124,26 +203,27 @@ public class UsuariosPanel extends JPanel {
             }
         });
 
-    // Use a row sorter for better UX and performance on filtering/sorting
+    // Usar un row sorter para mejor UX y rendimiento en filtrado/ordenamiento
     javax.swing.table.TableRowSorter<DefaultTableModel> sorter = new javax.swing.table.TableRowSorter<>(model);
     table.setRowSorter(sorter);
     table.setDefaultRenderer(Object.class, new HighlightRenderer());
 
-    // (Search removed) no keybinding for Ctrl+F remains
+    // (Búsqueda eliminada) no se mantiene el atajo Ctrl+F
 
-        table.getColumnModel().getColumn(0).setPreferredWidth(250);
-        table.getColumnModel().getColumn(1).setPreferredWidth(120);
-        table.getColumnModel().getColumn(2).setPreferredWidth(250);
-        table.getColumnModel().getColumn(3).setPreferredWidth(120);
-        table.getColumnModel().getColumn(4).setPreferredWidth(180);
+    // Anchos de columna (saltar columna id oculta en 0)
+    table.getColumnModel().getColumn(1).setPreferredWidth(250); // Nombre
+    table.getColumnModel().getColumn(2).setPreferredWidth(120); // Rol
+    table.getColumnModel().getColumn(3).setPreferredWidth(250); // Correo
+    table.getColumnModel().getColumn(4).setPreferredWidth(120); // Teléfono
+    table.getColumnModel().getColumn(5).setPreferredWidth(180); // Acciones
 
     JScrollPane scrollPane = new JScrollPane(table);
     scrollPane.setBorder(BorderFactory.createEmptyBorder());
-    // subtle separator: set row renderer border
+    // separador sutil: establecer borde al renderer de fila
     table.setDefaultRenderer(Object.class, new HighlightRenderer());
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        // Card panel (white rounded) that holds search + table
+        // Panel tipo tarjeta (blanco y redondeado) que contiene la tabla
         RoundedPanel card = new RoundedPanel(12, new Color(255,255,255));
         card.setLayout(new BorderLayout());
         card.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
@@ -153,7 +233,23 @@ public class UsuariosPanel extends JPanel {
         add(card, BorderLayout.CENTER);
     }
 
-    // Simple rounded button for consistent look
+    // Recargar datos de la tabla desde la base de datos (considerando sucursal)
+    public void reload() {
+    // limpiar filas del modelo
+        int rowCount = model.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) model.removeRow(i);
+    // repoblar
+        UserDAO userDAO = new UserDAO();
+        try {
+            for (User u : userDAO.findAll()) {
+                model.addRow(new Object[]{u.getId(), u.getName(), u.getRole(), u.getEmail(), u.getPhone(), ""});
+            }
+        } catch (SQLException ex) {
+            // keep empty or fallback sample data omitted
+        }
+    }
+
+    // Botón redondeado simple para apariencia consistente
     static class RoundedButton extends JButton {
         private Color bg;
         private Color fg;
@@ -185,15 +281,22 @@ public class UsuariosPanel extends JPanel {
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            lbl.setOpaque(false);
+            lbl.setOpaque(true);
             String role = value == null ? "" : value.toString();
             lbl.setText(role);
             lbl.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
-            lbl.setForeground(new Color(80,80,80));
-            // simple color per role
-            Color bg = new Color(230, 244, 255);
-            if (role.toLowerCase().contains("admin")) bg = new Color(255, 235, 238);
-            else if (role.toLowerCase().contains("gerente")) bg = new Color(255, 243, 224);
+            // mapeo explícito de colores: admin=rojo, gerente=naranja, usuario=azul
+            boolean dark = isDarkMode();
+            Color bg;
+            Color fg = dark ? Color.WHITE : new Color(44,44,44);
+            if (role.toLowerCase().contains("admin")) {
+                bg = dark ? new Color(155, 38, 34) : new Color(255, 205, 210); // red shades
+            } else if (role.toLowerCase().contains("gerente")) {
+                bg = dark ? new Color(204, 120, 20) : new Color(255, 224, 178); // orange shades
+            } else {
+                bg = dark ? new Color(10, 120, 210) : new Color(187, 222, 251); // blue shades
+            }
+            lbl.setForeground(fg);
             lbl.setBackground(bg);
             lbl.setOpaque(true);
             return lbl;
@@ -207,8 +310,21 @@ public class UsuariosPanel extends JPanel {
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             lbl.setText("<html><a href=\"#\">" + escapeHtml(value == null ? "" : value.toString()) + "</a></html>");
-            lbl.setForeground(new Color(0, 112, 255));
-            lbl.setOpaque(false);
+            Color link = UIManager.getColor("Link.foreground");
+            if (link == null) link = new Color(10,132,255);
+            lbl.setForeground(link);
+            // Hacer la etiqueta no opaca cuando la celda no está seleccionada para que el fondo
+            // de selección (verde pálido) se vea y el enlace no aparezca como caja blanca. Pintar
+            // fondo solo cuando la celda esté explícitamente seleccionada.
+            boolean cellSelected = table.isCellSelected(row, column);
+            lbl.setOpaque(cellSelected);
+            if (cellSelected) {
+                lbl.setBackground(table.getSelectionBackground());
+            } else {
+                // asegurar que no se pinte un fondo explícito para que el fondo de la fila
+                // (selección o normal) subyacente permanezca visible
+                lbl.setBackground(null);
+            }
             return lbl;
         }
     }
@@ -227,7 +343,7 @@ public class UsuariosPanel extends JPanel {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            // draw soft shadow
+            // dibujar sombra suave
             int shadowSize = 8;
             for (int i = shadowSize; i >= 1; i--) {
                 float alpha = 0.08f * (shadowSize - i + 1);
@@ -236,7 +352,7 @@ public class UsuariosPanel extends JPanel {
                 RoundRectangle2D.Float rr = new RoundRectangle2D.Float(offset, offset, getWidth()-offset*2, getHeight()-offset*2, radius, radius);
                 g2.fill(rr);
             }
-            // draw card
+            // dibujar la tarjeta
             g2.setColor(backgroundColor);
             g2.fillRoundRect(0, 0, getWidth()-4, getHeight()-4, radius, radius);
             g2.dispose();
@@ -248,28 +364,28 @@ public class UsuariosPanel extends JPanel {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
-            // We'll render text content possibly with inline highlight using HTML if needed
+            // Renderizaremos el contenido de texto, posiblemente con resaltado inline usando HTML si es necesario
             String text = value == null ? "" : value.toString();
             int modelRow = table.convertRowIndexToModel(row);
 
-            // base component styling
+            // estilo base del componente
             setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
             setOpaque(true);
 
             boolean isHighlightedRow = highlightedModelRows.contains(modelRow);
 
             if (isHighlightedRow && lastSearchText != null && !lastSearchText.isEmpty()) {
-                // Simple case-insensitive replace with HTML span (escape basic chars)
+                // Reemplazo simple insensible a mayúsculas/minúsculas usando span HTML (escapar caracteres básicos)
                 try {
-                    // Build HTML with escaped segments and wrapped matches
+                    // Construir HTML con segmentos escapados y coincidencias envueltas
                     Pattern p = Pattern.compile(Pattern.quote(lastSearchText), Pattern.CASE_INSENSITIVE);
                     java.util.regex.Matcher m = p.matcher(text);
                     StringBuilder sb = new StringBuilder();
                     int last = 0;
                     while (m.find()) {
-                        // append escaped segment before match
+                        // añadir segmento escapado antes de la coincidencia
                         sb.append(escapeHtml(text.substring(last, m.start())));
-                        // append escaped matched text with span
+                        // añadir texto coincidente escapado envuelto en span
                         sb.append("<span style=\"background-color:#FFF9C4;\">");
                         sb.append(escapeHtml(m.group()));
                         sb.append("</span>");
@@ -278,7 +394,7 @@ public class UsuariosPanel extends JPanel {
                     sb.append(escapeHtml(text.substring(last)));
                     setText("<html>" + sb.toString() + "</html>");
                 } catch (Throwable ex) {
-                    // Fallback: plain text with background color
+                    // Fallback: texto plano con color de fondo
                     setText(text);
                     setBackground(new Color(255, 249, 196));
                 }

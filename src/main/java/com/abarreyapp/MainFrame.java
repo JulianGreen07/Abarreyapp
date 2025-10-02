@@ -3,7 +3,6 @@ package com.abarreyapp;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class MainFrame extends JFrame {
@@ -15,10 +14,10 @@ public class MainFrame extends JFrame {
     private final Color defaultColor = new Color(52, 58, 64);
     private JLabel sectionSubtitleLabel;
     private java.util.Map<String, String> subtitles;
-    private String username;
+    private com.abarreyapp.model.User currentUser;
 
-    public MainFrame(String username) {
-        this.username = username;
+    public MainFrame(com.abarreyapp.model.User user) {
+        this.currentUser = user;
         setTitle("Abarrey - Sistema de Gestión");
         setSize(1000, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -37,37 +36,25 @@ public class MainFrame extends JFrame {
         logoPanel.add(logoLabel);
         topPanel.add(logoPanel, BorderLayout.WEST);
 
-    sectionSubtitleLabel = new JLabel();
+        sectionSubtitleLabel = new JLabel();
         sectionSubtitleLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         sectionSubtitleLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
-    // Show welcome message with username on the top center
-    String displayUser = (username != null && !username.isEmpty()) ? (Character.toUpperCase(username.charAt(0)) + username.substring(1)) : "Usuario";
-    JLabel userLabel = new JLabel(displayUser + ", ¡bienvenido!");
-    userLabel.setForeground(Color.WHITE);
-    userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-    JPanel centerTop = new JPanel(new BorderLayout());
-    centerTop.setOpaque(false);
-    centerTop.add(sectionSubtitleLabel, BorderLayout.NORTH);
-    centerTop.add(userLabel, BorderLayout.SOUTH);
-    topPanel.add(centerTop, BorderLayout.CENTER);
+        // Mostrar mensaje de bienvenida con el nombre de usuario en el centro superior
+        String displayUser = "Usuario";
+        if (currentUser != null && currentUser.getName() != null && !currentUser.getName().isEmpty()) {
+            String un = currentUser.getName();
+            displayUser = Character.toUpperCase(un.charAt(0)) + un.substring(1);
+        }
+        // No mostrar una etiqueta de bienvenida separada aquí; solo mostrar el subtítulo de la sección
+        JPanel centerTop = new JPanel(new BorderLayout());
+        centerTop.setOpaque(false);
+        centerTop.add(sectionSubtitleLabel, BorderLayout.CENTER);
+        topPanel.add(centerTop, BorderLayout.CENTER);
 
         JPanel rightHeaderPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        JToggleButton themeToggleButton = new JToggleButton("Modo Oscuro");
-        themeToggleButton.setSelected(UIManager.getLookAndFeel() instanceof FlatDarkLaf);
-        themeToggleButton.addActionListener(e -> {
-            try {
-                if (themeToggleButton.isSelected()) {
-                    FlatDarkLaf.setup();
-                } else {
-                    FlatLightLaf.setup();
-                }
-                SwingUtilities.updateComponentTreeUI(this);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
-        rightHeaderPanel.add(themeToggleButton);
+        // Forzar tema claro
+        FlatLightLaf.setup();
 
         topPanel.add(rightHeaderPanel, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
@@ -119,7 +106,7 @@ public class MainFrame extends JFrame {
                     }
                 }
             } catch (Exception e) {
-                // silently ignore
+                // ignorar silenciosamente
             }
 
             button.addActionListener(e -> {
@@ -133,7 +120,7 @@ public class MainFrame extends JFrame {
             navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         }
 
-        // Set initial active button and subtitle
+        // Establecer botón activo inicial y subtítulo
         if (!navButtons.isEmpty()) {
             setActiveButton(navButtons.get(0));
             sectionSubtitleLabel.setText(subtitles.get(navItems[0]));
