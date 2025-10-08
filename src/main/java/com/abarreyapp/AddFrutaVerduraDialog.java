@@ -83,4 +83,17 @@ public class AddFrutaVerduraDialog extends JDialog {
     public String getNombre() {
         return nombreField.getText().trim();
     }
+
+    /**
+     * Returns an object array with product data: name, category, price, stock
+     * Category/price/stock are placeholders when not provided by the dialog UI.
+     */
+    public Object[] getProductData() {
+        String name = getNombre();
+        // sensible defaults; UI doesn't capture these yet
+        String category = "Fruta";
+        String price = "0.00";
+        String stock = "0";
+        return new Object[]{name, category, price, stock};
+    }
 }

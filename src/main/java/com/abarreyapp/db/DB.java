@@ -16,7 +16,7 @@ public class DB {
         String port = DBConfig.get("db.port", "3306");
         String database = DBConfig.get("db.database", "abarrey_db");
         String user = DBConfig.get("db.user", "root");
-        String pass = DBConfig.get("db.password", "");
+        String pass = DBConfig.get("db.password", "root");
         String params = DBConfig.get("db.params", "useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
         String url = String.format("jdbc:mysql://%s:%s/%s?%s", host, port, database, params);
         return DriverManager.getConnection(url, user, pass);

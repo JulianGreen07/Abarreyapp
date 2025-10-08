@@ -19,12 +19,21 @@ else {
 }
 
 Write-Host "Arrancando: $jarPath" -ForegroundColor Green
-# Ejecuta el jar sin consola si es posible usando javaw
+
+# Construir classpath con todos los jars en lib + el JAR compilado
+$libDir = Join-Path $scriptRoot 'lib'
+$jars = @()
+if (Test-Path $libDir) { $jars = Get-ChildItem -Path $libDir -Filter '*.jar' | ForEach-Object { $_.FullName } }
+$cpItems = $jars + @($jarPath)
+# En Windows el separador de classpath es ';'
+$classpath = [string]::Join(';', $cpItems)
+
+# Preferir javaw si está disponible para no abrir consola
 $javaw = "${env:JAVA_HOME}\bin\javaw.exe"
 if (-not (Test-Path $javaw)) { $javaw = "javaw.exe" }
+
 if (Get-Command $javaw -ErrorAction SilentlyContinue) {
-    Start-Process -FilePath $javaw -ArgumentList "-jar", "$jarPath" -WindowStyle Normal
+    Start-Process -FilePath $javaw -ArgumentList '-cp', "`"$classpath`"", 'com.abarreyapp.Main' -WindowStyle Normal
 } else {
-    # fallback a java (puede abrir consola)
-    Start-Process -FilePath java -ArgumentList "-jar", "$jarPath" -WindowStyle Normal
+    Start-Process -FilePath java -ArgumentList '-cp', "`"$classpath`"", 'com.abarreyapp.Main' -WindowStyle Normal
 }
