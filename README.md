@@ -1,5 +1,7 @@
 AbarreyApp — ready-to-run package for classmates
 
+Actualizado 10 de octubre
+
 This folder contains a self-contained copy of the AbarreyApp Java Swing application prepared for sharing on GitHub.
 
 AbarreyApp — paquete listo para compartir con tus compañeros

@@ -1,6 +1,8 @@
 README de uso (español)
 =========================
 
+Actualizado 10 de octubre
+
 Requisitos
 ---------
 - JDK 11+ instalado en Windows (asegúrate de que `javac` y `java` estén en el PATH).
