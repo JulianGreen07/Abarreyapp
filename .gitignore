@@ -1,3 +1,20 @@
+# Java / build
+/target/
+*.class
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+
+# logs
+*.log
+
+# temp scripts
+scripts/helpers/*.sql
 # Git ignore for packaged project
 /target/
 /*.log

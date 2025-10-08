@@ -10,21 +10,23 @@ Requisitos
 Archivos importantes
 --------------------
 - `build.ps1` / `run.ps1`: scripts para compilar y ejecutar sin Maven (usa `javac` y `jar`).
-- `src/main/resources/db.properties`: archivo de configuración para la conexión a la base de datos.
-- `sql/init_db.sql`: script para crear la base de datos y tablas mínimas necesarias, y un usuario administrador de ejemplo.
+-- `src/main/resources/db.properties`: archivo de configuración para la conexión a la base de datos.
+-- `sql/init_db.sql`: script para crear la base de datos y tablas mínimas necesarias, y un usuario administrador de ejemplo.
+-- `scripts/setup_db.ps1`: script interactivo para crear la base y usuario de aplicación (usa el cliente `mysql`).
+-- `scripts/helpers/`: scripts SQL auxiliares (creación de usuario, ajuste de plugin, inspección).
 
 Pasos rápidos
 -------------
-1) Configura MySQL y crea la base de datos ejecutando el script SQL:
+1) Configura MySQL y crea la base de datos y el usuario de aplicación (script interactivo):
 
-   Abre PowerShell y ejecuta:
+  Abre PowerShell en la raíz del proyecto y ejecuta:
 
 ```powershell
 # posicionarse en la carpeta del proyecto
 cd .\for_github\AbarreyApp
 
-# ejecutar el script SQL (se pedirá la contraseña de MySQL)
-mysql -u root -p < .\sql\init_db.sql
+# ejecutar el script interactivo que crea la DB y el usuario de aplicación
+.\scripts\setup_db.ps1
 ```
 
 2) Ajusta `src/main/resources/db.properties` si tus credenciales/host son diferentes.
@@ -36,10 +38,10 @@ cd .\for_github\AbarreyApp
 .\build.ps1
 ```
 
-4) Ejecuta la aplicación:
+4) Ejecuta la aplicación (para ver salida en la consola):
 
 ```powershell
-.\run.ps1
+.\scripts\run_app.ps1
 ```
 
 Pruebas rápidas (credenciales de ejemplo)
