@@ -53,7 +53,21 @@ public class RegistrarLlegadaDialog extends JDialog {
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        productoComboBox = new JComboBox<>(availableFruitsVegetables);
+        // Populate product list from DB (use ProductDAO). Fall back to the embedded list on error.
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+        try {
+            com.abarreyapp.dao.ProductDAO pdao = new com.abarreyapp.dao.ProductDAO();
+            for (String[] r : pdao.findAll()) {
+                // r[1] is the product name
+                model.addElement(r[1]);
+            }
+            if (model.getSize() == 0) {
+                for (String s : availableFruitsVegetables) model.addElement(s);
+            }
+        } catch (Exception ex) {
+            for (String s : availableFruitsVegetables) model.addElement(s);
+        }
+        productoComboBox = new JComboBox<>(model);
         formPanel.add(productoComboBox, gbc);
 
         // Cantidad
@@ -93,6 +107,27 @@ public class RegistrarLlegadaDialog extends JDialog {
 
         btnRegistrar.addActionListener(e -> {
             if (validateInput()) {
+                // attempt to persist arrival into DB
+                try {
+                    String producto = (String) productoComboBox.getSelectedItem();
+                    double qty = Double.parseDouble(cantidadField.getText());
+                    // find product id
+                    com.abarreyapp.dao.ProductDAO pdao = new com.abarreyapp.dao.ProductDAO();
+                    int productId = -1;
+                    for (String[] r : pdao.findAll()) {
+                        if (r[1].equals(producto)) { productId = Integer.parseInt(r[0]); break; }
+                    }
+                    if (productId > 0) {
+                        com.abarreyapp.dao.ArrivalDAO adao = new com.abarreyapp.dao.ArrivalDAO();
+                        int newId = adao.insert(productId, qty);
+                        if (newId <= 0) {
+                            JOptionPane.showMessageDialog(this, "No se pudo guardar la llegada en la base de datos.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                        }
+                    }
+                } catch (Exception ex) {
+                    // If persistence fails, show an informative message and continue (row will still be added locally)
+                    JOptionPane.showMessageDialog(this, "No se pudo guardar la llegada en la base de datos: " + ex.getMessage(), "Error de BD", JOptionPane.ERROR_MESSAGE);
+                }
                 confirmed = true;
                 setVisible(false);
             }

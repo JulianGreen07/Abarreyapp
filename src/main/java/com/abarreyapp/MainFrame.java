@@ -3,8 +3,6 @@ package com.abarreyapp;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-import javax.imageio.ImageIO;
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class MainFrame extends JFrame {
@@ -16,14 +14,20 @@ public class MainFrame extends JFrame {
     private final Color defaultColor = new Color(52, 58, 64);
     private JLabel sectionSubtitleLabel;
     private java.util.Map<String, String> subtitles;
+    private com.abarreyapp.model.User currentUser;
 
-    public MainFrame(String username) {
+    // keep panel references so we can call reload hooks
+    private FrutasVerdurasPanel frutasVerdurasPanel;
+    private ReportesPanel reportesPanel;
+
+    public MainFrame(com.abarreyapp.model.User user) {
+        this.currentUser = user;
         setTitle("Abarrey - Sistema de Gestión");
         setSize(1000, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         
-        // Panel superior
+    // Panel superior
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setPreferredSize(new Dimension(getWidth(), 50));
 
@@ -36,46 +40,45 @@ public class MainFrame extends JFrame {
         logoPanel.add(logoLabel);
         topPanel.add(logoPanel, BorderLayout.WEST);
 
-        sectionSubtitleLabel = new JLabel();
+    sectionSubtitleLabel = new JLabel();
         sectionSubtitleLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         sectionSubtitleLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
-        topPanel.add(sectionSubtitleLabel, BorderLayout.CENTER);
+    // Mostrar mensaje de bienvenida con el nombre de usuario en el centro superior
+    String displayUser = "Usuario";
+    if (currentUser != null && currentUser.getName() != null && !currentUser.getName().isEmpty()) {
+        String un = currentUser.getName();
+        displayUser = Character.toUpperCase(un.charAt(0)) + un.substring(1);
+    }
+    // No mostrar una etiqueta de bienvenida separada aquí; solo mostrar el subtítulo de la sección
+    JPanel centerTop = new JPanel(new BorderLayout());
+    centerTop.setOpaque(false);
+    centerTop.add(sectionSubtitleLabel, BorderLayout.CENTER);
+    topPanel.add(centerTop, BorderLayout.CENTER);
 
-        JPanel rightHeaderPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    JPanel rightHeaderPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        JToggleButton themeToggleButton = new JToggleButton("Modo Oscuro");
-        themeToggleButton.setSelected(UIManager.getLookAndFeel() instanceof FlatDarkLaf);
-        themeToggleButton.addActionListener(e -> {
-            try {
-                if (themeToggleButton.isSelected()) {
-                    FlatDarkLaf.setup();
-                } else {
-                    FlatLightLaf.setup();
-                }
-                SwingUtilities.updateComponentTreeUI(this);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
-        rightHeaderPanel.add(themeToggleButton);
+    // Selector de tema eliminado; forzar tema claro
+        FlatLightLaf.setup();
 
         topPanel.add(rightHeaderPanel, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
-        // Panel de navegación izquierdo
+    // Panel de navegación izquierdo
         JPanel navPanel = new JPanel();
         navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
         navPanel.setBackground(defaultColor);
         navPanel.setPreferredSize(new Dimension(180, getHeight()));
         navPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
-        // Panel principal con CardLayout
+    // Panel principal con CardLayout
         cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
-        mainPanel.add(new UsuariosPanel(this), "Usuarios");
-        mainPanel.add(new FrutasVerdurasPanel(this), "Frutas y Verduras");
-        mainPanel.add(new MermaPanel(this), "Merma");
-        mainPanel.add(new ReportesPanel(this), "Reportes");
+    mainPanel = new JPanel(cardLayout);
+    mainPanel.add(new UsuariosPanel(this), "Usuarios");
+    this.frutasVerdurasPanel = new FrutasVerdurasPanel(this);
+    mainPanel.add(this.frutasVerdurasPanel, "Frutas y Verduras");
+    mainPanel.add(new MermaPanel(this), "Merma");
+    this.reportesPanel = new ReportesPanel(this);
+    mainPanel.add(this.reportesPanel, "Reportes");
 
         String[] navItems = {"Usuarios", "Frutas y Verduras", "Merma", "Reportes"};
         String[] iconNames = {"users.png", "fruits.png", "waste.png", "reports.png"};
@@ -102,19 +105,28 @@ public class MainFrame extends JFrame {
             try {
                 URL iconUrl = getClass().getResource("/icons/" + iconName);
                 if (iconUrl != null) {
-                    ImageIcon icon = new ImageIcon(ImageIO.read(iconUrl));
-                    Image img = icon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-                    button.setIcon(new ImageIcon(img));
+                    ImageIcon icon = new ImageIcon(iconUrl);
+                    if (icon.getIconWidth() > 0 && icon.getIconHeight() > 0) {
+                        Image img = icon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+                        button.setIcon(new ImageIcon(img));
+                    }
                 }
             } catch (Exception e) {
-                System.err.println("No se pudo cargar el ícono: " + iconName);
-                e.printStackTrace();
+                // ignorar silenciosamente
             }
 
             button.addActionListener(e -> {
                 cardLayout.show(mainPanel, item);
                 setActiveButton((JButton) e.getSource());
                 sectionSubtitleLabel.setText(subtitles.get(item));
+                // if switching to reports, refresh product checklist (so newly added products appear)
+                if ("Reportes".equals(item) && this.reportesPanel != null) {
+                    try { this.reportesPanel.reloadProducts(); } catch (Exception ex) { /* ignore refresh failures */ }
+                }
+                // if switching to Frutas y Verduras, reload products table to reflect changes
+                if ("Frutas y Verduras".equals(item) && this.frutasVerdurasPanel != null) {
+                    try { this.frutasVerdurasPanel.reload(); } catch (Exception ex) { }
+                }
             });
 
             navPanel.add(button);
@@ -122,7 +134,7 @@ public class MainFrame extends JFrame {
             navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         }
 
-        // Set initial active button and subtitle
+    // Establecer botón activo inicial y subtítulo
         if (!navButtons.isEmpty()) {
             setActiveButton(navButtons.get(0));
             sectionSubtitleLabel.setText(subtitles.get(navItems[0]));
@@ -131,7 +143,7 @@ public class MainFrame extends JFrame {
         add(navPanel, BorderLayout.WEST);
         add(mainPanel, BorderLayout.CENTER);
 
-        // Panel inferior para el botón de cerrar sesión
+    // Panel inferior para el botón de cerrar sesión
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnSalir = new JButton("Cerrar Sesión");
         btnSalir.addActionListener(e -> {

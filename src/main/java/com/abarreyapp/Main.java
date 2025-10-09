@@ -1,21 +1,30 @@
 package com.abarreyapp;
 
-// FlatLaf removed to avoid compile-time dependency when building without Maven
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
         try {
-            // Use system look and feel as a safe default when FlatLaf isn't available
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            FlatLightLaf.setup();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        // Debug: write startup marker
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileOutputStream("app_start.log", true))) {
+            pw.println("Main started at: " + java.time.LocalDateTime.now());
+        } catch (Exception ex) {
+            // ignore
+        }
+
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new LoginForm().setVisible(true);
+                LoginForm lf = new LoginForm();
+                lf.setVisible(true);
+                lf.toFront();
+                lf.requestFocus();
             }
         });
     }

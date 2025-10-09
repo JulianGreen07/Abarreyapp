@@ -9,14 +9,20 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import javax.imageio.ImageIO;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class LoginForm extends JFrame {
     private JTextField txtUsuario;
     private JPasswordField txtContrasena;
-    private JComboBox<String> cmbSucursal;
+    private JComboBox<com.abarreyapp.model.Branch> cmbSucursal;
     private JButton btnIngresar;
 
     public LoginForm() {
+    // Depuración: registrar creación
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileOutputStream("app_start.log", true))) {
+            pw.println("LoginForm created at: " + java.time.LocalDateTime.now());
+        } catch (Exception ex) {}
         setTitle("Inicio de Sesión - Abarrey");
         setSize(800, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -31,10 +37,8 @@ public class LoginForm extends JFrame {
                 try {
                     URL imageUrl = getClass().getResource("/login_background.png");
                     if (imageUrl != null) {
-                        Image bg = new ImageIcon(imageUrl).getImage();
+                        Image bg = ImageIO.read(imageUrl);
                         g.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
-                    } else {
-                        System.err.println("Background image not found: /login_background.png");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -53,25 +57,8 @@ public class LoginForm extends JFrame {
 
         JPanel headerPanel = new JPanel(new BorderLayout());
 
-        JToggleButton themeToggleButton = new JToggleButton("Modo Oscuro");
-        themeToggleButton.setSelected(false);
-        themeToggleButton.addActionListener(e -> {
-            try {
-                if (themeToggleButton.isSelected()) {
-                    UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-                    themeToggleButton.setText("Modo Claro");
-                } else {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                    themeToggleButton.setText("Modo Oscuro");
-                }
-                SwingUtilities.updateComponentTreeUI(this);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
-        JPanel togglePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        togglePanel.add(themeToggleButton);
-        headerPanel.add(togglePanel, BorderLayout.NORTH);
+    // Cambio de tema eliminado; la aplicación usa solo tema claro
+        FlatLightLaf.setup();
 
 
         JLabel lblBienvenido = new JLabel("BIENVENIDO");
@@ -113,16 +100,26 @@ public class LoginForm extends JFrame {
         gbc.gridy = 5;
         rightPanel.add(lblSucursal, gbc);
 
-        String[] sucursales = {"Sucursal Central", "Sucursal Norte", "Sucursal Sur"};
-        cmbSucursal = new JComboBox<>(sucursales);
+    // poblar la lista de sucursales desde la BD (tabla branches)
+        java.util.List<com.abarreyapp.model.Branch> branches = new java.util.ArrayList<>();
+        try {
+            com.abarreyapp.dao.BranchDAO bdao = new com.abarreyapp.dao.BranchDAO();
+            branches = bdao.findAll();
+        } catch (Exception ex) {
+            // fallback a valores por defecto
+            branches.add(new com.abarreyapp.model.Branch(1, "Sucursal Central"));
+            branches.add(new com.abarreyapp.model.Branch(2, "Sucursal Norte"));
+            branches.add(new com.abarreyapp.model.Branch(3, "Sucursal Sur"));
+        }
+    cmbSucursal = new JComboBox<com.abarreyapp.model.Branch>(branches.toArray(new com.abarreyapp.model.Branch[0]));
         cmbSucursal.setFont(new Font("Arial", Font.PLAIN, 14));
         gbc.gridy = 6;
         rightPanel.add(cmbSucursal, gbc);
 
-        btnIngresar = new RoundedButton("Ingresar");
-        btnIngresar.setFont(new Font("Arial", Font.BOLD, 16));
-        btnIngresar.setBackground(new Color(0, 123, 255));
-        btnIngresar.setForeground(Color.WHITE);
+    btnIngresar = new RoundedButton("Ingresar");
+    btnIngresar.setFont(new Font("Arial", Font.BOLD, 16));
+    btnIngresar.setBackground(new Color(40,167,69)); // green
+    btnIngresar.setForeground(Color.WHITE);
         gbc.gridy = 7;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -136,19 +133,72 @@ public class LoginForm extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String usuario = txtUsuario.getText();
                 String contrasena = new String(txtContrasena.getPassword());
-                String sucursal = (String) cmbSucursal.getSelectedItem();
+                Object sel = cmbSucursal.getSelectedItem();
 
-                if (sucursal == null || sucursal.isEmpty()) {
+                if (sel == null) {
                     JOptionPane.showMessageDialog(LoginForm.this, "Por favor, seleccione una sucursal.", "Entrada no válida", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                if (usuario.equalsIgnoreCase("admin") && contrasena.equals("1234") && sucursal.equalsIgnoreCase("Sucursal Central")) {
-                    dispose();
-                    new MainFrame(usuario).setVisible(true);
-                } else {
-                    JOptionPane.showMessageDialog(LoginForm.this, "Credenciales incorrectas", "Error", JOptionPane.ERROR_MESSAGE);
+                // Authenticate via UserDAO within the selected branch
+                try {
+                    if (sel instanceof com.abarreyapp.model.Branch) {
+                        com.abarreyapp.model.Branch b = (com.abarreyapp.model.Branch) sel;
+                        com.abarreyapp.db.BranchContext.setCurrentBranchId(b.getId());
+                    }
+                    com.abarreyapp.dao.UserDAO udao = new com.abarreyapp.dao.UserDAO();
+                    com.abarreyapp.model.User u = udao.findByName(usuario);
+                    if (u != null && u.getRole() != null && u.getRole().toLowerCase().contains("admin")) {
+                        // verify password: if password_hash exists verify, otherwise allow legacy '1234' and migrate
+                        String stored = u.getPasswordHash();
+                        boolean ok = false;
+                        if (stored != null && !stored.isEmpty()) {
+                            ok = com.abarreyapp.util.PasswordUtil.verify(contrasena.toCharArray(), stored);
+                        } else {
+                            // legacy password acceptance for migration
+                            if (contrasena.equals("1234")) {
+                                ok = true;
+                                try {
+                                    String newHash = com.abarreyapp.util.PasswordUtil.hash(contrasena.toCharArray());
+                                    udao.updatePasswordHash(u.getId(), newHash);
+                                } catch (Exception ex) {
+                                    // ignore migration failure
+                                }
+                            }
+                        }
+
+                        if (ok) {
+                            dispose();
+                            MainFrame mf = new MainFrame(u);
+                            mf.setVisible(true);
+                            mf.toFront();
+                            mf.requestFocus();
+                        } else {
+                            JOptionPane.showMessageDialog(LoginForm.this, "Credenciales incorrectas o usuario no administrador en esta sucursal.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(LoginForm.this, "Credenciales incorrectas o usuario no administrador en esta sucursal.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(LoginForm.this, "Error al autenticar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
+            }
+        });
+    // Forzar la ventana al frente brevemente en caso de que se abra detrás de otras ventanas
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // asegurar visible y al frente
+                setVisible(true);
+                toFront();
+                setAlwaysOnTop(true);
+                // registrar en log
+                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileOutputStream("app_start.log", true))) {
+                    pw.println("LoginForm shown at: " + java.time.LocalDateTime.now());
+                } catch (Exception ex) {}
+                // quitar always-on-top poco después
+                new javax.swing.Timer(300, ev -> setAlwaysOnTop(false)).start();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
