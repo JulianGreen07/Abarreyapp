@@ -6,15 +6,15 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
-/** UI updated to match the second screenshot: header + subtitle, placeholders,
- * soft input styling and styled Cancel/Add buttons.
+/** Interfaz actualizada para coincidir con la segunda imagen: encabezado + subtítulo,
+ * placeholders, estilo suave en campos y botones Cancelar/Agregar con estilo.
  */
 public class AddUserDialog extends JDialog {
     private final JTextField txtNombre = new JTextField();
     private final JTextField txtCorreo = new JTextField();
     private final JTextField txtTelefono = new JTextField();
     private final JComboBox<String> cmbRol = new JComboBox<>(new String[]{"Seleccione un rol", "Administrador", "Gerente", "Usuario"});
-    // Inline error labels (initially blank)
+    // Etiquetas de error en línea (inicialmente vacías)
     private final JLabel errNombre = new JLabel("");
     private final JLabel errRol = new JLabel("");
     private final JLabel errCorreo = new JLabel("");
@@ -22,7 +22,7 @@ public class AddUserDialog extends JDialog {
     private boolean confirmed = false;
     private boolean deleted = false;
 
-    // Placeholder strings (used to detect placeholder vs real text)
+    // Textos de placeholder (sirven para distinguir placeholder vs texto real)
     private final String phNombre = "Ingrese el nombre completo";
     private final String phCorreo = "ejemplo@gmail.com";
     private final String phTelefono = "662123456";
@@ -30,15 +30,15 @@ public class AddUserDialog extends JDialog {
     public AddUserDialog(Frame owner, String title, Object[] data) {
     super(owner, title, true);
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-    // Remove native title bar (no system X button)
+    // Quitar barra de título nativa (sin botón X del sistema)
     setUndecorated(true);
     setSize(400, 440);
     setResizable(false);
-    // Center on screen (not relative to the app window) so it appears perfectly centered
+    // Centrar en pantalla (no relativo a la ventana padre) para que quede perfectamente centrado
     setLocationRelativeTo(null);
 
-        // We'll draw a rounded white panel in the center to emulate the modal card
-    // Use a BorderLayout so we can place the modal in the center and buttons at the bottom
+        // Dibujaremos un panel blanco redondeado en el centro para emular la tarjeta modal
+    // Usar BorderLayout para colocar la modal al centro y la botonera abajo
     JPanel content = new JPanel(new BorderLayout());
     content.setOpaque(false);
 
@@ -46,11 +46,11 @@ public class AddUserDialog extends JDialog {
     modal.setLayout(new BorderLayout(10,10));
     modal.setBorder(BorderFactory.createCompoundBorder(
         new LineBorder(new Color(230,230,230), 1, true),
-        // Increase left padding to shift content to the right for visual alignment
+    // Aumentar padding izquierdo para alinear visualmente el contenido
         BorderFactory.createEmptyBorder(12,32,12,16)
     ));
 
-    // Header inside modal (use the dialog title so it works for both Add and Edit)
+    // Encabezado dentro de la modal (usa el título del diálogo: sirve para Agregar y Editar)
     JPanel header = new JPanel(new BorderLayout());
     header.setOpaque(false);
     JPanel titleWrap = new JPanel(new BorderLayout());
@@ -66,15 +66,15 @@ public class AddUserDialog extends JDialog {
     titleWrap.add(sub, BorderLayout.SOUTH);
     titleWrap.setBorder(BorderFactory.createEmptyBorder(0,0,6,0));
 
-    // No close button here; let the window manager provide the close affordance
+    // Sin botón de cierre aquí; la ventana es indecorada y se cierra con los controles provistos
     header.add(titleWrap, BorderLayout.CENTER);
     modal.add(header, BorderLayout.NORTH);
 
-    // Fields area (vertical)
+    // Área de campos (vertical)
     JPanel fields = new JPanel();
     fields.setOpaque(false);
     fields.setLayout(new BoxLayout(fields, BoxLayout.Y_AXIS));
-    // add slight left padding to ensure consistent alignment with buttons row
+    // Pequeño padding izquierdo para alinear con la fila de botones
     fields.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 
     styleField(txtNombre);
@@ -85,7 +85,7 @@ public class AddUserDialog extends JDialog {
     fields.add(makeLabel("Nombre Completo"));
     addPlaceholder(txtNombre, phNombre);
     fields.add(txtNombre);
-    // inline error label
+    // etiqueta de error en línea
     errNombre.setFont(new Font("Segoe UI", Font.PLAIN, 12));
     errNombre.setForeground(new Color(200,50,50));
     errNombre.setBorder(BorderFactory.createEmptyBorder(6,6,6,6));
@@ -94,7 +94,7 @@ public class AddUserDialog extends JDialog {
     fields.add(Box.createRigidArea(new Dimension(0,6)));
 
     fields.add(makeLabel("Rol"));
-    // wrap combo to align width
+    // ajustar combo para alinear el ancho
     cmbRol.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
     fields.add(cmbRol);
     errRol.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -125,7 +125,7 @@ public class AddUserDialog extends JDialog {
 
     modal.add(fields, BorderLayout.CENTER);
 
-        // Buttons area with subtle divider and rounded buttons
+    // Área de botones con separador sutil y botones redondeados
         JPanel buttons = new JPanel(new BorderLayout());
         buttons.setOpaque(false);
 
@@ -148,12 +148,12 @@ public class AddUserDialog extends JDialog {
         btnRow.add(btnCancel);
         btnRow.add(btnAdd);
         buttons.add(btnRow, BorderLayout.CENTER);
-        // Put buttons inside the modal so they appear attached to the white card
+    // Colocar los botones dentro de la tarjeta para que queden visualmente unidos
         modal.add(buttons, BorderLayout.SOUTH);
-    // Add the modal card to the dialog content
+    // Agregar la tarjeta modal al contenido del diálogo
     content.add(modal, BorderLayout.CENTER);
 
-        // Populate data if editing
+    // Rellenar datos si estamos editando
         if (data != null) {
             if (data.length > 0 && data[0] != null && !data[0].toString().isEmpty()) txtNombre.setText(data[0].toString());
             if (data.length > 1 && data[1] != null) cmbRol.setSelectedItem(data[1].toString());
@@ -162,7 +162,7 @@ public class AddUserDialog extends JDialog {
         }
 
         setContentPane(content);
-        // Request focus on first field
+    // Enfocar el primer campo
         SwingUtilities.invokeLater(() -> txtNombre.requestFocusInWindow());
     }
 
@@ -185,7 +185,7 @@ public class AddUserDialog extends JDialog {
     }
 
     private void addPlaceholder(JTextField field, String placeholder) {
-        // initialize placeholder only if empty
+    // inicializar placeholder solo si está vacío
         if (field.getText().trim().isEmpty()) {
             field.setText(placeholder);
             field.setForeground(new Color(140,140,140));
@@ -215,12 +215,12 @@ public class AddUserDialog extends JDialog {
         String telefono = txtTelefono.getText().trim();
         String rol = cmbRol.getSelectedItem() == null ? "" : cmbRol.getSelectedItem().toString();
 
-        // Treat placeholders as empty
+    // Tratar placeholders como vacío
         if (nombre.equals(phNombre)) nombre = "";
         if (correo.equals(phCorreo)) correo = "";
         if (telefono.equals(phTelefono)) telefono = "";
 
-    // Clear previous inline errors
+    // Limpiar errores en línea previos
     errNombre.setText(""); errNombre.setVisible(false);
     errRol.setText(""); errRol.setVisible(false);
     errCorreo.setText(""); errCorreo.setVisible(false);
@@ -256,12 +256,12 @@ public class AddUserDialog extends JDialog {
     public boolean isConfirmed() { return confirmed; }
     public boolean isDeleted() { return deleted; }
 
-    // Test helper: programmatically trigger confirm (useful for unit testing)
+    // Ayuda de prueba: activar confirmación programáticamente (útil para tests)
     public void submitProgrammatically() {
         onConfirm();
     }
 
-    // Test-friendly setters (package API) to allow programmatic tests to populate fields
+    // Setters amigables para pruebas (API de paquete) para poblar campos en tests
     public void setNameField(String name) { txtNombre.setText(name); }
     public void setRoleSelection(String role) { cmbRol.setSelectedItem(role); }
     public void setEmailField(String email) { txtCorreo.setText(email); }
@@ -279,7 +279,7 @@ public class AddUserDialog extends JDialog {
     }
 }
 
-    // Rounded button used inside the modal for a cleaner look
+    // Botón redondeado usado dentro de la modal para una apariencia más limpia
     class RoundedModalButton extends JButton {
         private final boolean primary;
         public RoundedModalButton(String text, boolean primary) {
@@ -319,7 +319,7 @@ public class AddUserDialog extends JDialog {
         }
     }
 
-// Small rounded panel helper used to draw a white modal card with optional border
+// Pequeño panel redondeado auxiliar usado para dibujar la tarjeta blanca de la modal con borde opcional
 class RoundedPanel extends JPanel {
     private final int radius;
     private final Color bg;
@@ -339,7 +339,7 @@ class RoundedPanel extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         int w = getWidth();
         int h = getHeight();
-        // draw a soft outer shadow
+    // dibujar una sombra exterior suave
         int shadowSize = 8;
         for (int i = shadowSize; i >= 1; i--) {
             float alpha = 0.03f * (shadowSize - i + 1);

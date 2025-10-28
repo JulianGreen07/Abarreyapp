@@ -21,7 +21,7 @@ public class UsuariosPanel extends JPanel {
     private JTable table;
     private final Set<Integer> highlightedModelRows = new HashSet<>();
     private String lastSearchText = "";
-    private Color highlightColor = null; // lazy theme-aware
+    private Color highlightColor = null; // cálculo perezoso según tema
     private JFrame parentFrame;
 
     public UsuariosPanel(JFrame parentFrame) {
@@ -38,7 +38,7 @@ public class UsuariosPanel extends JPanel {
     titlePanel.setOpaque(false);
     JLabel titleLabel = new JLabel("Usuarios");
     titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-    // Placeholder for username removed from header (we don't show the "admin, ¡bienvenido!" subtitle here)
+    // Se eliminó el placeholder del usuario en el encabezado (no mostramos el subtítulo "admin, ¡bienvenido!" aquí)
     titlePanel.add(titleLabel);
     titlePanel.add(Box.createRigidArea(new Dimension(0,6)));
     headerPanel.add(titlePanel, BorderLayout.WEST);
@@ -70,9 +70,9 @@ public class UsuariosPanel extends JPanel {
                 u.setEmail(email);
                 u.setPhone(phone);
                 int newId = dao.insert(u);
-                // reload full model so row ordering and sorting is consistent
+                // recargar todo el modelo para mantener el orden y la clasificación consistentes
                 reload();
-                // select and scroll to the newly added row (match by id)
+                // seleccionar y desplazar hasta la fila recién agregada (comparando por id)
                 for (int i = 0; i < model.getRowCount(); i++) {
                     Object idObj = model.getValueAt(i, 0);
                     if (idObj != null) {
@@ -163,14 +163,14 @@ public class UsuariosPanel extends JPanel {
             int viewRow = table.rowAtPoint(e.getPoint());
             int viewCol = table.columnAtPoint(e.getPoint());
             if (viewRow < 0 || viewCol < 0) return;
-            // Email column is index 3 (view index)
+            // La columna de Correo es el índice 3 (índice de vista)
             if (viewCol == 3) {
-                // enable column selection and select the specific cell
+                // habilitar selección por columna y seleccionar la celda específica
                 table.setColumnSelectionAllowed(true);
                 table.setRowSelectionInterval(viewRow, viewRow);
                 table.setColumnSelectionInterval(viewCol, viewCol);
             } else {
-                // ensure we are in full-row selection mode
+                // asegurar que estamos en modo de selección por fila completa
                 table.setColumnSelectionAllowed(false);
                 table.setRowSelectionInterval(viewRow, viewRow);
             }
@@ -245,7 +245,7 @@ public class UsuariosPanel extends JPanel {
                 model.addRow(new Object[]{u.getId(), u.getName(), u.getRole(), u.getEmail(), u.getPhone(), ""});
             }
         } catch (SQLException ex) {
-            // keep empty or fallback sample data omitted
+            // mantener vacío o (opcional) poblar con datos de muestra
         }
     }
 
@@ -267,14 +267,14 @@ public class UsuariosPanel extends JPanel {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            // subtle shadow
+            // sombra sutil
             int shadow = 6;
             for (int i = 0; i < shadow; i++) {
                 float a = (float)(shadow - i) / (shadow * 6f);
                 g2.setColor(new Color(0,0,0, Math.min(1.0f, a)));
                 g2.fillRoundRect(i, i, getWidth()-i*2, getHeight()-i*2, 16, 16);
             }
-            // draw button
+            // dibujar botón
             g2.setColor(bg);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
             g2.dispose();
@@ -298,11 +298,11 @@ public class UsuariosPanel extends JPanel {
             Color bg;
             Color fg = dark ? Color.WHITE : new Color(44,44,44);
             if (role.toLowerCase().contains("admin")) {
-                bg = dark ? new Color(155, 38, 34) : new Color(255, 205, 210); // red shades
+                bg = dark ? new Color(155, 38, 34) : new Color(255, 205, 210); // tonos rojos
             } else if (role.toLowerCase().contains("gerente")) {
-                bg = dark ? new Color(204, 120, 20) : new Color(255, 224, 178); // orange shades
+                bg = dark ? new Color(204, 120, 20) : new Color(255, 224, 178); // tonos naranjas
             } else {
-                bg = dark ? new Color(10, 120, 210) : new Color(187, 222, 251); // blue shades
+                bg = dark ? new Color(10, 120, 210) : new Color(187, 222, 251); // tonos azules
             }
             lbl.setForeground(fg);
             lbl.setBackground(bg);
@@ -485,7 +485,7 @@ public class UsuariosPanel extends JPanel {
             editButton.addActionListener(e -> {
                 fireEditingStopped();
                 int modelRow = UsuariosPanel.this.table.convertRowIndexToModel(row);
-                // Prepare data expected by AddUserDialog: {name, role, email, phone}
+                // Preparar los datos que espera AddUserDialog: {name, role, email, phone}
                 Object[] rowData = new Object[4];
                 rowData[0] = model.getValueAt(modelRow, 1); // Nombre
                 rowData[1] = model.getValueAt(modelRow, 2); // Rol
@@ -496,9 +496,9 @@ public class UsuariosPanel extends JPanel {
                 dialog.setVisible(true);
                 System.out.println("UsuariosPanel: dialog closed. isDeleted=" + dialog.isDeleted() + " isConfirmed=" + dialog.isConfirmed());
 
-                // If the dialog signaled deletion, perform delete
+                // Si el diálogo indicó eliminación, realizar borrado
                 if (dialog.isDeleted()) {
-                    // ID is in column 0
+                    // El ID está en la columna 0
                     Object idObj = model.getValueAt(modelRow, 0);
                     int id = -1;
                     if (idObj instanceof Number) id = ((Number) idObj).intValue();
@@ -525,7 +525,7 @@ public class UsuariosPanel extends JPanel {
 
                 if (dialog.isConfirmed()) {
                     Object[] updatedData = dialog.getUserData();
-                    // persist to DB if possible
+                    // Persistir en la BD si es posible
                     Object idObj = model.getValueAt(modelRow, 0);
                     int id = -1;
                     if (idObj instanceof Number) id = ((Number) idObj).intValue();
@@ -552,7 +552,7 @@ public class UsuariosPanel extends JPanel {
                             if (!ok) {
                                 JOptionPane.showMessageDialog(UsuariosPanel.this.parentFrame, "No se pudo actualizar el usuario en la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
                             } else {
-                                // update model columns (skip ID at column 0). updatedData[0] -> col 1
+                                // Actualizar columnas del modelo (omitir ID en columna 0). updatedData[0] -> col 1
                                 for (int i = 0; i < updatedData.length; i++) {
                                     model.setValueAt(updatedData[i], modelRow, i + 1);
                                 }
@@ -561,7 +561,7 @@ public class UsuariosPanel extends JPanel {
                             JOptionPane.showMessageDialog(UsuariosPanel.this.parentFrame, "Error al actualizar en la base de datos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     } else {
-                        // fallback row (no DB id), update table columns 1..4
+                        // Fila de respaldo (sin id de BD), actualizar columnas 1..4 de la tabla
                         for (int i = 0; i < updatedData.length; i++) {
                             model.setValueAt(updatedData[i], modelRow, i + 1);
                         }
@@ -569,7 +569,7 @@ public class UsuariosPanel extends JPanel {
                 }
             });
 
-            // deletion moved inside edit dialog; no row-level delete here
+            // La eliminación se realiza dentro del diálogo de edición; no hay borrado por fila aquí
         }
 
         @Override
