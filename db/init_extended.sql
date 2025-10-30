@@ -15,10 +15,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS products (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
+  category VARCHAR(255),
   stock VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  branch_id INT NOT NULL DEFAULT 1,
-  category VARCHAR(255)
+  branch_id INT NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS mermas (
@@ -34,10 +34,10 @@ INSERT INTO users (name, role, email, phone) VALUES
 ('Juan Pérez', 'Administrador', 'juan.perez@example.com', '662123456'),
 ('María López', 'Usuario', 'maria.lopez@example.com', '662987654');
 
-INSERT INTO products (name, category, price, stock) VALUES
-('Manzana', 'Fruta', 25.50, '100 kg'),
-('Plátano', 'Fruta', 15.00, '150 kg'),
-('Tomate', 'Verdura', 30.00, '80 kg'),
-('Lechuga', 'Verdura', 12.00, '50 pz');
+INSERT INTO products (name, category, stock) VALUES
+('Manzana', 'Fruta', '100 kg'),
+('Plátano', 'Fruta', '150 kg'),
+('Tomate', 'Verdura', '80 kg'),
+('Lechuga', 'Verdura', '50 pz');
 
 INSERT INTO mermas (product_id, weight) VALUES (1, 0.5),(2,0.3),(3,0.2);

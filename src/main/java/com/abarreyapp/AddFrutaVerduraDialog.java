@@ -85,15 +85,13 @@ public class AddFrutaVerduraDialog extends JDialog {
     }
 
     /**
-     * Returns an object array with product data: name, category, price, stock
-     * Category/price/stock are placeholders when not provided by the dialog UI.
+     * Devuelve un arreglo con datos del producto: name, category, stock.
+     * La UI no captura categoría ni stock todavía, por lo que se generan valores por defecto.
      */
     public Object[] getProductData() {
         String name = getNombre();
-        // sensible defaults; UI doesn't capture these yet
-        String category = "Fruta";
-        String price = "0.00";
-        String stock = "0";
-        return new Object[]{name, category, price, stock};
+        String category = "Fruta"; // valor por defecto
+        String stock = "0";       // valor por defecto
+        return new Object[]{name, category, stock};
     }
 }

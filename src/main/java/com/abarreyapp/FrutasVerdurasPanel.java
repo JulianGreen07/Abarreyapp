@@ -33,10 +33,9 @@ public class FrutasVerdurasPanel extends JPanel {
                 Object[] d = dialog.getProductData();
                 String name = d.length>0?d[0].toString():"";
                 String cat = d.length>1?d[1].toString():"";
-                double price = d.length>2?Double.parseDouble(d[2].toString()):0.0;
-                String stock = d.length>3?d[3].toString():"";
+                String stock = d.length>2?d[2].toString():"";
                 try {
-                    int newId = this.productDAO.insert(name, cat, price, stock);
+                    int newId = this.productDAO.insert(name, cat, stock);
                     if (newId > 0) {
                         // recargar desde la BD para obtener IDs canónicos y el orden
                         reload();
@@ -264,10 +263,8 @@ public class FrutasVerdurasPanel extends JPanel {
                                     int rid = Integer.parseInt(r[0]);
                                     if (rid == id) {
                                         String existingCat = r[2];
-                                        double existingPrice = 0.0;
-                                        try { existingPrice = Double.parseDouble(r[3]); } catch (Exception ex) {}
-                                        String existingStock = r[4];
-                                        boolean ok = FrutasVerdurasPanel.this.productDAO.update(id, name, existingCat, existingPrice, existingStock);
+                                        String existingStock = r[3];
+                                        boolean ok = FrutasVerdurasPanel.this.productDAO.update(id, name, existingCat, existingStock);
                                         if (ok) {
                                             reload();
                                             // reseleccionar el elemento actualizado
@@ -465,10 +462,8 @@ public class FrutasVerdurasPanel extends JPanel {
                                     int rid = Integer.parseInt(r[0]);
                                     if (rid == id) {
                                         String cat = r[2];
-                                        double price = 0.0;
-                                        try { price = Double.parseDouble(r[3]); } catch (Exception ex) {}
-                                        String stock = r[4];
-                                            boolean ok = productDAO.update(id, newName.trim(), cat, price, stock);
+                                        String stock = r[3];
+                                            boolean ok = productDAO.update(id, newName.trim(), cat, stock);
                                             if (ok) {
                                                 // recargar desde la BD y reseleccionar
                                                 reload();

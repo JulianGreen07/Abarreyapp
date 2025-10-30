@@ -8,26 +8,25 @@ import java.util.List;
 public class ProductDAO {
     public List<String[]> findAll() throws SQLException {
         List<String[]> out = new ArrayList<>();
-        String sql = "SELECT id, name, category, price, stock FROM products WHERE branch_id = ? ORDER BY id";
+        String sql = "SELECT id, name, category, stock FROM products WHERE branch_id = ? ORDER BY id";
         try (Connection c = DB.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, com.abarreyapp.db.BranchContext.getCurrentBranchId());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    out.add(new String[]{String.valueOf(rs.getInt("id")), rs.getString("name"), rs.getString("category"), rs.getString("price"), rs.getString("stock")});
+                    out.add(new String[]{String.valueOf(rs.getInt("id")), rs.getString("name"), rs.getString("category"), rs.getString("stock")});
                 }
             }
         }
         return out;
     }
 
-    public int insert(String name, String category, double price, String stock) throws SQLException {
-        String sql = "INSERT INTO products (name, category, price, stock, branch_id) VALUES (?, ?, ?, ?, ?)";
+    public int insert(String name, String category, String stock) throws SQLException {
+        String sql = "INSERT INTO products (name, category, stock, branch_id) VALUES (?, ?, ?, ?)";
         try (Connection c = DB.getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, name);
             ps.setString(2, category);
-            ps.setDouble(3, price);
-            ps.setString(4, stock);
-            ps.setInt(5, com.abarreyapp.db.BranchContext.getCurrentBranchId());
+            ps.setString(3, stock);
+            ps.setInt(4, com.abarreyapp.db.BranchContext.getCurrentBranchId());
             int rows = ps.executeUpdate();
             logOp("INSERT name=" + name + " rows=" + rows);
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -63,15 +62,14 @@ public class ProductDAO {
         return null;
     }
 
-    public boolean update(int id, String name, String category, double price, String stock) throws SQLException {
-        String sql = "UPDATE products SET name=?, category=?, price=?, stock=? WHERE id=? AND branch_id = ?";
+    public boolean update(int id, String name, String category, String stock) throws SQLException {
+        String sql = "UPDATE products SET name=?, category=?, stock=? WHERE id=? AND branch_id = ?";
         try (Connection c = DB.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, name);
             ps.setString(2, category);
-            ps.setDouble(3, price);
-            ps.setString(4, stock);
-            ps.setInt(5, id);
-            ps.setInt(6, com.abarreyapp.db.BranchContext.getCurrentBranchId());
+            ps.setString(3, stock);
+            ps.setInt(4, id);
+            ps.setInt(5, com.abarreyapp.db.BranchContext.getCurrentBranchId());
             int rows = ps.executeUpdate();
             logOp("UPDATE id=" + id + " rows=" + rows + " name=" + name);
             return rows > 0;
