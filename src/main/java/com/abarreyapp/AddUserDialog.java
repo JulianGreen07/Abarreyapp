@@ -20,7 +20,7 @@ public class AddUserDialog extends JDialog {
         JPanel content = new JPanel(new BorderLayout());
         content.setBorder(BorderFactory.createEmptyBorder(18,18,18,18));
 
-    // Encabezado: título + subtítulo
+        // Encabezado: título + subtítulo
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         JLabel titleLbl = new JLabel("Agregar Nuevo Usuario");
@@ -32,7 +32,7 @@ public class AddUserDialog extends JDialog {
         header.add(sub, BorderLayout.SOUTH);
         content.add(header, BorderLayout.NORTH);
 
-    // Área de campos
+        // Área de campos
         JPanel fields = new JPanel(new GridBagLayout());
         fields.setOpaque(false);
         GridBagConstraints g = new GridBagConstraints();
@@ -78,7 +78,7 @@ public class AddUserDialog extends JDialog {
 
         content.add(fields, BorderLayout.CENTER);
 
-    // Botones
+        // Botones
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
         JButton btnCancel = new JButton("Cancelar");
         btnCancel.setBackground(Color.WHITE);
@@ -94,12 +94,16 @@ public class AddUserDialog extends JDialog {
         btns.add(btnConfirm);
         content.add(btns, BorderLayout.SOUTH);
 
-    // poblar datos al editar
+        // --- (MODIFICACIÓN: ÍNDICES CORREGIDOS) ---
+        // poblar datos al editar
         if (data != null) {
-            txtNombre.setText((String) data[0]);
-            cmbRol.setSelectedItem(data[1] != null ? data[1].toString() : "Seleccione un rol");
-            txtCorreo.setText((String) data[2]);
-            txtTelefono.setText((String) data[3]);
+            // Los datos que llegan son [ID, Nombre, Rol, Correo, Teléfono]
+            // El índice 0 es el ID, no lo usamos en los campos de texto, así que lo ignoramos.
+
+            txtNombre.setText((String) data[1]); // Índice 1 es el Nombre
+            cmbRol.setSelectedItem(data[2] != null ? data[2].toString() : "Seleccione un rol"); // Índice 2 es el Rol
+            txtCorreo.setText((String) data[3]); // Índice 3 es el Correo
+            txtTelefono.setText((String) data[4]); // Índice 4 es el Teléfono
         }
 
         setContentPane(content);
@@ -158,10 +162,10 @@ public class AddUserDialog extends JDialog {
 
     public Object[] getUserData() {
         return new Object[] {
-            txtNombre.getText().equals("Ingrese el nombre completo") ? "" : txtNombre.getText(),
-            cmbRol.getSelectedItem() == null ? "" : cmbRol.getSelectedItem().toString(),
-            txtCorreo.getText().equals("ejemplo@gmail.com") ? "" : txtCorreo.getText(),
-            txtTelefono.getText().equals("662123456") ? "" : txtTelefono.getText()
+                txtNombre.getText().equals("Ingrese el nombre completo") ? "" : txtNombre.getText(),
+                cmbRol.getSelectedItem() == null ? "" : cmbRol.getSelectedItem().toString(),
+                txtCorreo.getText().equals("ejemplo@gmail.com") ? "" : txtCorreo.getText(),
+                txtTelefono.getText().equals("662123456") ? "" : txtTelefono.getText()
         };
     }
 }

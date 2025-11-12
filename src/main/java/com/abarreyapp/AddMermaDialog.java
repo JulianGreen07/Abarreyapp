@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.text.ParseException; // <-- (MODIFICACIÓN 1: IMPORTACIÓN AÑADIDA)
 
 public class AddMermaDialog extends JDialog {
 
@@ -13,11 +14,12 @@ public class AddMermaDialog extends JDialog {
     private boolean confirmed = false;
 
     private String[] availableFruitsVegetables = {
-        "Manzana", "Plátano", "Lechuga", "Tomate", "Zanahoria", "Brócoli",
-        "Naranja", "Apio", "Pepino", "Pimiento", "Cebolla", "Papa",
-        "Limón", "Aguacate", "Espinaca", "Coliflor"
+            "Manzana", "Plátano", "Lechuga", "Tomate", "Zanahoria", "Brócoli",
+            "Naranja", "Apio", "Pepino", "Pimiento", "Cebolla", "Papa",
+            "Limón", "Aguacate", "Espinaca", "Coliflor"
     };
 
+    // Este es tu constructor original (para "Nuevo")
     public AddMermaDialog(Frame owner) {
         super(owner, "Registrar Merma", true);
         setSize(400, 250);
@@ -89,6 +91,32 @@ public class AddMermaDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    // --- (MODIFICACIÓN 2: NUEVO CONSTRUCTOR AÑADIDO) ---
+    // Este es el nuevo constructor para "Editar"
+    public AddMermaDialog(Frame owner, String currentProduct, String currentWeight, String currentDate) {
+
+        // 1. Llama al constructor original para construir toda la ventana
+        this(owner);
+
+        // 2. Rellena los campos con los datos que recibimos para editar
+        productoComboBox.setSelectedItem(currentProduct);
+
+        // Limpia el " kg" del texto de la cantidad
+        String weightValue = currentWeight.replace(" kg", "").trim();
+        cantidadField.setText(weightValue);
+
+        // Convierte el String de fecha (yyyy-MM-dd) de vuelta a un objeto Date
+        try {
+            // Asegúrate de que el formato aquí coincida con el formato de la tabla
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            fechaField.setValue(sdf.parse(currentDate));
+        } catch (ParseException e) {
+            // Si algo falla, solo deja la fecha de hoy
+            fechaField.setValue(new Date());
+        }
+    }
+    // --- (FIN DE LA MODIFICACIÓN) ---
+
     private boolean validateInput() {
         if (productoComboBox.getSelectedIndex() == -1) {
             JOptionPane.showMessageDialog(this, "Debe seleccionar un producto.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
@@ -126,8 +154,14 @@ public class AddMermaDialog extends JDialog {
 
     public Object[] getMermaData() {
         String producto = (String) productoComboBox.getSelectedItem();
-        String cantidad = cantidadField.getText();
+        // Leemos el valor del campo, que ya no tiene " kg"
+        String cantidad = cantidadField.getText().trim();
+        // Volvemos a añadir " kg" para que se muestre bien en la tabla
+        String cantidadConUnidad = cantidad + " kg";
+
         String fecha = new SimpleDateFormat("yyyy-MM-dd").format((Date) fechaField.getValue());
-        return new Object[]{producto, cantidad, "Dañado", fecha, ""}; // Motivo hardcoded por ahora
+
+        // Devolvemos el array como lo espera MermaPanel
+        return new Object[]{producto, cantidadConUnidad, "Dañado", fecha, ""};
     }
 }
