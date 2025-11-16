@@ -5,11 +5,11 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date; // <-- Esto es java.util.Date (para el calendario y los campos)
+import java.util.Date; // <-- java.util.Date (para el calendario y los campos)
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.SQLException;
-// --- (MODIFICACIÓN: NO IMPORTAMOS java.sql.Date para evitar conflicto) ---
+// (Importación de java.sql.Date eliminada para evitar conflictos)
 
 // --- ¡NUEVAS IMPORTACIONES PARA PDF (iText)! ---
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -25,7 +25,11 @@ import com.itextpdf.kernel.colors.ColorConstants;
 import com.abarreyapp.dao.MermaDAO; // Importar el DAO
 import com.abarreyapp.dao.LlegadaDAO; // Importar el DAO
 
+// --- IMPORTACIONES RESTAURADAS PARA RESPALDO ---
 import java.io.File; // Para el JFileChooser
+import javax.swing.JFileChooser; // Para el JFileChooser
+import java.io.IOException; // Para manejar errores del ProcessBuilder
+// --- (FIN DE IMPORTACIÓN) ---
 
 public class ReportesPanel extends JPanel {
 
@@ -70,7 +74,6 @@ public class ReportesPanel extends JPanel {
 
         dateRangeLabel = new JLabel();
 
-        // Usamos el formato dd/MM/yyyy como lo tenías
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         startDateField = new JFormattedTextField(sdf);
         startDateField.setColumns(10);
@@ -93,7 +96,6 @@ public class ReportesPanel extends JPanel {
 
         periodoComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                // --- (MODIFICACIÓN: CORREGIDO EL TYPO 'CardDayout') ---
                 updateDateRange(e.getItem().toString(), (CardLayout) dateContainer.getLayout(), dateContainer);
             }
         });
@@ -167,6 +169,11 @@ public class ReportesPanel extends JPanel {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         bottomPanel.add(generarReporteBtn);
 
+        JButton btnRespaldar = new JButton("Crear Respaldo DB");
+        btnRespaldar.setBackground(new Color(23, 162, 184)); // Color azul
+        btnRespaldar.setForeground(Color.WHITE);
+        bottomPanel.add(btnRespaldar);
+
         controlsContainer.add(mainControlsPanel, BorderLayout.CENTER);
         controlsContainer.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -175,16 +182,11 @@ public class ReportesPanel extends JPanel {
 
         generarReporteBtn.addActionListener(e -> {
             try {
-                // 1. Obtener Fechas
-                // --- (MODIFICACIÓN: Usamos el nombre completo java.sql.Date) ---
                 java.sql.Date[] dates = getSqlDates();
-                if (dates == null) {
-                    return;
-                }
+                if (dates == null) return;
                 java.sql.Date startDate = dates[0];
                 java.sql.Date endDate = dates[1];
 
-                // 2. Obtener Productos seleccionados
                 List<String> selectedProducts = new ArrayList<>();
                 for (JCheckBox cb : productChecks) {
                     if (cb.isSelected()) {
@@ -196,7 +198,6 @@ public class ReportesPanel extends JPanel {
                     return;
                 }
 
-                // 3. Preguntar dónde guardar
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setDialogTitle("Guardar Reporte PDF");
                 fileChooser.setSelectedFile(new File("Reporte_Abarrey.pdf"));
@@ -204,16 +205,78 @@ public class ReportesPanel extends JPanel {
 
                 if (userSelection == JFileChooser.APPROVE_OPTION) {
                     File fileToSave = fileChooser.getSelectedFile();
-
-                    // 4. Consultar la BD y Generar el PDF
                     generatePdf(fileToSave.getAbsolutePath(), startDate, endDate, selectedProducts);
-
                     JOptionPane.showMessageDialog(ownerFrame, "¡Reporte PDF generado exitosamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 }
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(ownerFrame, "Error al generar el reporte: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace(); // Imprime el error en la consola de IntelliJ
+                ex.printStackTrace();
+            }
+        });
+
+        // --- (LÓGICA DE RESPALDO CORREGIDA) ---
+        btnRespaldar.addActionListener(e -> {
+            int confirmacion = JOptionPane.showConfirmDialog(
+                    ownerFrame,
+                    "¿Deseas crear un respaldo de la base de datos ahora?\nEsto puede tardar unos segundos.",
+                    "Confirmar Respaldo",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirmacion == JOptionPane.YES_OPTION) {
+
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Guardar Respaldo SQL Como...");
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date());
+                fileChooser.setSelectedFile(new File("abarrey_db_backup_" + timeStamp + ".sql"));
+
+                int userSelection = fileChooser.showSaveDialog(ownerFrame);
+
+                if (userSelection == JFileChooser.APPROVE_OPTION) {
+                    File archivoDeRespaldo = fileChooser.getSelectedFile();
+
+                    try {
+                        String dbUser = "abarrey_user";
+                        String dbPass = "ChangeMe123!";
+                        String dbName = "abarrey_db";
+
+                        // --- (MODIFICACIÓN: RUTA COMPLETA A mysqldump.exe) ---
+                        // Asegúrate de que esta sea la ruta donde instalaste MySQL
+                        String mysqlDumpPath = "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe";
+
+                        ProcessBuilder pb = new ProcessBuilder(
+                                mysqlDumpPath, // Usamos la ruta completa
+                                "-u" + dbUser,
+                                "-p" + dbPass,
+                                dbName
+                        );
+                        // --- (FIN DE MODIFICACIÓN) ---
+
+                        pb.redirectOutput(archivoDeRespaldo);
+
+                        Process process = pb.start();
+                        int exitCode = process.waitFor();
+
+                        if (exitCode == 0) {
+                            JOptionPane.showMessageDialog(ownerFrame,
+                                    "¡Respaldo creado exitosamente!\nGuardado en: " + archivoDeRespaldo.getAbsolutePath());
+                        } else {
+                            String error = new String(process.getErrorStream().readAllBytes());
+                            JOptionPane.showMessageDialog(ownerFrame,
+                                    "Error al crear el respaldo. Código: " + exitCode + "\nError: " + error,
+                                    "Error de Respaldo", JOptionPane.ERROR_MESSAGE);
+                        }
+
+                    } catch (IOException ioEx) {
+                        JOptionPane.showMessageDialog(ownerFrame,
+                                "Error: No se pudo ejecutar 'mysqldump'.\n\nAsegúrate de que la ruta en el código es correcta.\n" + ioEx.getMessage(),
+                                "Error de Ejecución", JOptionPane.ERROR_MESSAGE);
+                    } catch (InterruptedException intEx) {
+                        JOptionPane.showMessageDialog(ownerFrame,
+                                "El proceso de respaldo fue interrumpido.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         });
     }
@@ -221,7 +284,6 @@ public class ReportesPanel extends JPanel {
     /**
      * Genera el archivo PDF con los datos.
      */
-    // --- (MODIFICACIÓN: Usamos el nombre completo java.sql.Date) ---
     private void generatePdf(String dest, java.sql.Date startDate, java.sql.Date endDate, List<String> products) throws Exception {
 
         PdfWriter writer = new PdfWriter(dest);
@@ -236,7 +298,6 @@ public class ReportesPanel extends JPanel {
 
         document.add(new Paragraph("\n"));
 
-        // Consultar DAOs
         List<Object[]> llegadas = llegadaDAO.findForReport(startDate, endDate);
         List<Object[]> mermas = mermaDAO.findForReport(startDate, endDate);
 
@@ -296,20 +357,16 @@ public class ReportesPanel extends JPanel {
     /**
      * Obtiene las fechas de inicio y fin en formato SQL.
      */
-    // --- (MODIFICACIÓN: Usamos el nombre completo java.sql.Date) ---
     private java.sql.Date[] getSqlDates() {
-        // Formato para PARSEAR los campos de texto
-        // SimpleDateFormat sdfInput = new SimpleDateFormat("dd/MM/yyyy"); // <-- Variable no usada eliminada
         Calendar cal = Calendar.getInstance();
 
-        java.util.Date utilEndDate = cal.getTime(); // Fecha de hoy (java.util.Date)
+        java.util.Date utilEndDate = cal.getTime();
         java.util.Date utilStartDate = cal.getTime();
 
         String selectedPeriod = periodoComboBox.getSelectedItem().toString();
 
         try {
             if ("Periodo personalizado".equals(selectedPeriod)) {
-                // Leer fechas de los campos de texto (que están en formato dd/MM/yyyy)
                 utilStartDate = (java.util.Date) startDateField.getValue();
                 utilEndDate = (java.util.Date) endDateField.getValue();
 
@@ -343,7 +400,6 @@ public class ReportesPanel extends JPanel {
 
 
     private void updateDateRange(String selectedPeriod, CardLayout cl, JPanel container) {
-        // Formato para MOSTRAR en la etiqueta
         SimpleDateFormat sdfDisplay = new SimpleDateFormat("dd/MM/yyyy");
         Calendar cal = Calendar.getInstance();
         java.util.Date endDate = cal.getTime();
